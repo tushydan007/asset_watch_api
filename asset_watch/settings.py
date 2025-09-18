@@ -54,6 +54,7 @@ INSTALLED_APPS = [
     "accounts",
     "aoi",
     "payments",
+    "order",
     "notifications",
     "monitoring",
 ]
@@ -98,11 +99,13 @@ ASGI_APPLICATION = "asset_watch.asgi.application"
 # Database
 DATABASES = {
     "default": dj_database_url.config(
-        default=f"postgis://postgres:postgres@localhost:5432/aoi_monitoring",
+        env="DATABASE_URL",  # explicitly use DATABASE_URL from environment
+        default="postgis://postgres:postgres@postgres_postgis:5432/aoi_monitoring",
         conn_max_age=600,
         conn_health_checks=True,
     )
 }
+
 
 
 # Password validation
@@ -139,13 +142,13 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATIC_URL = "static/"
+STATIC_URL = "/static/"
 
-STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
+STATIC_ROOT = os.path.join(BASE_DIR, "static")
 
-STATICFILES_DIRS = [
-    BASE_DIR / "static",
-]
+# STATICFILES_DIRS = [
+#     BASE_DIR / "static",
+# ]
 
 # Media files
 MEDIA_URL = "/media/"

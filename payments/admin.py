@@ -8,7 +8,6 @@ class PaymentAdmin(admin.ModelAdmin):
     list_filter = ['status', 'payment_provider', 'monitoring_type', 'created_at']
     search_fields = ['user__email', 'provider_payment_id']
     readonly_fields = ['id', 'created_at', 'updated_at']
-    filter_horizontal = ['aois']
 
 
 @admin.register(PaymentWebhook)

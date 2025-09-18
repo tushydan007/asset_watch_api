@@ -7,6 +7,7 @@ from django.contrib.gis.measure import D
 from .models import Aoi, EncroachmentDetection
 from .serializers import AoiSerializer, EncroachmentDetectionSerializer
 from .filters import AoiFilter, EncroachmentDetectionFilter
+from order.services import CartService
 
 
 class AoiViewSet(viewsets.ModelViewSet):
@@ -18,13 +19,35 @@ class AoiViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         return Aoi.objects.filter(user=self.request.user)
     
+    def create(self, request):
+        """Create AOI and add to cart"""
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            # Create AOI with status 'in_cart'
+            aoi = serializer.save(user=request.user, status='in_cart')
+            
+            # Automatically add to cart
+            try:
+                CartService.add_aoi_to_cart(
+                    request.user, 
+                    aoi.id, 
+                    request.data.get('monitoring_type', 'daily')
+                )
+            except Exception as e:
+                # If adding to cart fails, we should handle it gracefully
+                pass
+            
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
     @action(detail=False, methods=['get'])
-    def cart(self):
-        """Get AOIs in cart (unpaid AOIs)"""
-        unpaid_aois = self.get_queryset().filter(is_paid=False)
-        serializer = self.get_serializer(unpaid_aois, many=True)
+    def in_cart(self, request):
+        """Get AOIs in cart"""
+        cart_aois = self.get_queryset().filter(status='in_cart', is_paid=False)
+        serializer = self.get_serializer(cart_aois, many=True)
         return Response({
-            'count': unpaid_aois.count(),
+            'count': cart_aois.count(),
             'results': serializer.data
         })
     
@@ -81,6 +104,7 @@ class EncroachmentDetectionViewSet(viewsets.ReadOnlyModelViewSet):
     @action(detail=True, methods=['post'])
     def confirm(self, request, pk=None):
         """Confirm an encroachment detection"""
+        from django.utils import timezone
         encroachment = self.get_object()
         encroachment.is_confirmed = True
         encroachment.confirmed_at = timezone.now()

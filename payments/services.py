@@ -4,41 +4,22 @@ from django.conf import settings
 from django.utils import timezone
 from decimal import Decimal
 from .models import Payment
-from aoi.models import Aoi
+from order.models import Order
+from order.services import OrderService
 
 
 class PaymentService:
-    # Pricing per AOI in USD
-    PRICING = {
-        'daily': Decimal('5.00'),
-        'monthly': Decimal('100.00'),
-        'yearly': Decimal('1000.00'),
-    }
-    
     @classmethod
-    def calculate_amount(cls, aoi_count, monitoring_type):
-        """Calculate total payment amount"""
-        base_price = cls.PRICING.get(monitoring_type, cls.PRICING['daily'])
-        return base_price * aoi_count
-    
-    @classmethod
-    def create_payment(cls, user, aoi_ids, monitoring_type, payment_provider, currency='USD'):
+    def create_payment(cls, user, order, payment_provider):
         """Create a new payment record"""
-        aois = AOI.objects.filter(id__in=aoi_ids, user=user, is_paid=False)
-        
-        if not aois.exists():
-            raise ValueError("No valid unpaid AOIs found")
-        
-        amount = cls.calculate_amount(aois.count(), monitoring_type)
-        
         payment = Payment.objects.create(
             user=user,
-            amount=amount,
-            currency=currency,
-            monitoring_type=monitoring_type,
+            order=order,
+            amount=order.total_amount,
+            currency=order.currency,
+            monitoring_type=order.order_items.first().monitoring_type,  # Assume all items have same type
             payment_provider=payment_provider
         )
-        payment.aois.set(aois)
         
         return payment
 
@@ -55,8 +36,8 @@ class StripePaymentService:
                 currency=payment.currency.lower(),
                 metadata={
                     'payment_id': str(payment.id),
+                    'order_id': str(payment.order.id),
                     'user_email': payment.user.email,
-                    'monitoring_type': payment.monitoring_type,
                 }
             )
             
@@ -71,7 +52,7 @@ class StripePaymentService:
             raise ValueError(f"Stripe error: {str(e)}")
     
     def confirm_payment(self, payment_intent_id):
-        """Confirm payment and update AOIs"""
+        """Confirm payment and complete order"""
         try:
             intent = stripe.PaymentIntent.retrieve(payment_intent_id)
             payment_id = intent.metadata.get('payment_id')
@@ -82,8 +63,8 @@ class StripePaymentService:
                 payment.completed_at = timezone.now()
                 payment.save()
                 
-                # Mark AOIs as paid
-                payment.aois.all().update(is_paid=True)
+                # Complete the order
+                OrderService.complete_order(payment.order.id)
                 
                 return True
             return False
@@ -114,8 +95,7 @@ class PaystackPaymentService:
             'callback_url': f'{settings.FRONTEND_URL}/payment/callback',
             'metadata': {
                 'payment_id': str(payment.id),
-                'monitoring_type': payment.monitoring_type,
-                'aoi_count': payment.aois.count()
+                'order_id': str(payment.order.id),
             }
         }
         
@@ -160,8 +140,8 @@ class PaystackPaymentService:
                     payment.completed_at = timezone.now()
                     payment.save()
                     
-                    # Mark AOIs as paid
-                    payment.aois.all().update(is_paid=True)
+                    # Complete the order
+                    OrderService.complete_order(payment.order.id)
                     
                     return True
                 except Payment.DoesNotExist:

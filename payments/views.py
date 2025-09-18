@@ -5,12 +5,12 @@ from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 from django.http import HttpResponse
-from django.utils.decorators import method_decorator
 import stripe
 import json
 from .models import Payment, PaymentWebhook
 from .serializers import PaymentCreateSerializer, PaymentSerializer
 from .services import PaymentService, StripePaymentService, PaystackPaymentService
+from order.models import Order
 
 
 class PaymentViewSet(viewsets.ModelViewSet):
@@ -25,12 +25,17 @@ class PaymentViewSet(viewsets.ModelViewSet):
         serializer = PaymentCreateSerializer(data=request.data)
         if serializer.is_valid():
             try:
+                order_id = serializer.validated_data['order_id']
+                payment_provider = serializer.validated_data['payment_provider']
+                
+                # Get the order
+                order = Order.objects.get(id=order_id, user=request.user, status='pending')
+                
+                # Create payment
                 payment = PaymentService.create_payment(
                     user=request.user,
-                    aoi_ids=serializer.validated_data['aoi_ids'],
-                    monitoring_type=serializer.validated_data['monitoring_type'],
-                    payment_provider=serializer.validated_data['payment_provider'],
-                    currency=serializer.validated_data.get('currency', 'USD')
+                    order=order,
+                    payment_provider=payment_provider
                 )
                 
                 # Initialize payment with chosen provider
@@ -46,7 +51,7 @@ class PaymentViewSet(viewsets.ModelViewSet):
                     **result
                 }, status=status.HTTP_201_CREATED)
                 
-            except ValueError as e:
+            except (ValueError, Order.DoesNotExist) as e:
                 return Response(
                     {'error': str(e)},
                     status=status.HTTP_400_BAD_REQUEST
@@ -57,7 +62,8 @@ class PaymentViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'])
     def pricing(self, request):
         """Get pricing information"""
-        return Response(PaymentService.PRICING)
+        from order.models import CartItem
+        return Response(CartItem.PRICING)
     
     @action(detail=True, methods=['post'])
     def verify_paystack(self, request, pk=None):

@@ -17,6 +17,7 @@ class Aoi(models.Model):
         ('active', 'Active'),
         ('inactive', 'Inactive'),
         ('expired', 'Expired'),
+        ('in_cart', 'In Cart'),  # Added for cart functionality
     ]
     
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -24,12 +25,15 @@ class Aoi(models.Model):
     name = models.CharField(max_length=255)
     geometry = models.PolygonField(srid=4326)
     monitoring_type = models.CharField(max_length=10, choices=MONITORING_CHOICES, default='daily')
-    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='inactive')
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='in_cart')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     start_date = models.DateTimeField(null=True, blank=True)
     end_date = models.DateTimeField(null=True, blank=True)
     is_paid = models.BooleanField(default=False)
+    
+    # Cart-specific fields
+    added_to_cart_at = models.DateTimeField(auto_now_add=True)
     
     class Meta:
         db_table = 'aoi'
@@ -73,6 +77,7 @@ class EncroachmentDetection(models.Model):
     confirmed_at = models.DateTimeField(null=True, blank=True)
     
     class Meta:
+        db_table = 'encroachment_detection'
         ordering = ['-detected_at']
     
     def __str__(self):

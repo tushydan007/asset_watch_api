@@ -75,7 +75,7 @@ def monitor_aoi_task(self, aoi_id):
             'encroachments_detected': encroachments_found
         }
         
-    except Aoi.DoesNotExist:
+    except AOI.DoesNotExist:
         logger.error(f"AOI {aoi_id} not found or not active")
         return {'error': 'AOI not found or not active'}
     
@@ -141,15 +141,7 @@ def schedule_monitoring_jobs():
 def fetch_satellite_images():
     """Fetch new satellite images from various sources"""
     try:
-        # This would integrate with satellite data providers like:
-        # - Google Earth Engine
-        # - Sentinel Hub
-        # - NASA APIs
-        # - Commercial providers
-        
-        # For demo purposes, we'll simulate fetching images
         images_fetched = SatelliteImageService.fetch_latest_images()
-        
         logger.info(f"Fetched {images_fetched} new satellite images")
         return {'images_fetched': images_fetched}
         
@@ -162,6 +154,8 @@ def fetch_satellite_images():
 def cleanup_old_data():
     """Clean up old monitoring jobs and notifications"""
     try:
+        from notifications.models import Notification
+        
         cutoff_date = timezone.now() - timedelta(days=90)
         
         # Clean up old monitoring jobs

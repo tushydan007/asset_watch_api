@@ -5,9 +5,17 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    command: python manage.py migrate --noinput
+    command: >
+      sh -c "if [ \"$${DJANGO_ENV}\" = 'development' ];
+             then python manage.py makemigrations --noinput && python manage.py migrate --noinput;
+             else python manage.py migrate --noinput;
+             fi"
     depends_on:
       - db
+    env_file:
+      - ./.env
+    volumes:
+      - .:/app
 
   db:
     image: postgis/postgis:15-3.3
@@ -46,7 +54,7 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: asset_watch_backend
-    entrypoint: ["/asset_watch/scripts/docker-entrypoint.sh"]
+    entrypoint: ["/usr/local/bin/scripts/docker-entrypoint-backend.sh"]
     volumes:
       - .:/app
       - static_volume:/app/staticfiles
@@ -73,6 +81,7 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: celery_worker
+    entrypoint: ["/usr/local/bin/scripts/docker-entrypoint-celery.sh"]
     command: celery -A asset_watch worker --loglevel=info --concurrency=2
     volumes:
       - .:/app
@@ -89,6 +98,7 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: celery_beat
+    entrypoint: ["/usr/local/bin/scripts/docker-entrypoint-celery.sh"]
     command: celery -A asset_watch beat --loglevel=info --scheduler django_celery_beat.schedulers:DatabaseScheduler
     volumes:
       - .:/app
