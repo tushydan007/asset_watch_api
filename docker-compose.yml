@@ -5,11 +5,19 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    command: >
-      sh -c "if [ \"$${DJANGO_ENV}\" = 'development' ];
-             then python manage.py makemigrations --noinput && python manage.py migrate --noinput;
-             else python manage.py migrate --noinput;
-             fi"
+    command: |
+      sh -c '
+      echo "Waiting for database to be ready...";
+      while ! pg_isready -h db -p 5432 -U postgres; do
+        echo "Waiting for database...";
+        sleep 2;
+      done;
+      echo "Database is ready!";
+      if [ "$DJANGO_ENV" = "development" ];
+      then python manage.py makemigrations --noinput && python manage.py migrate --noinput;
+      else python manage.py migrate --noinput;
+      fi
+      '
     depends_on:
       - db
     env_file:
