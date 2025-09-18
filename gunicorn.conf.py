@@ -21,12 +21,12 @@ errorlog = "-"
 loglevel = "info"
 
 # Process naming
-proc_name = 'aoi_monitoring'
+proc_name = "aoi_monitoring"
 
 # Server mechanics
 preload_app = True
 daemon = False
-pidfile = '/tmp/gunicorn.pid'
+pidfile = "/tmp/gunicorn.pid"
 
 # Security
 limit_request_line = 4094

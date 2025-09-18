@@ -38,10 +38,11 @@ COPY scripts/docker-entrypoint-backend.sh /usr/local/bin/scripts/
 COPY scripts/docker-entrypoint-celery.sh /usr/local/bin/scripts/
 COPY scripts/docker-entrypoint-migrate.sh /usr/local/bin/scripts/
 
+
 # Make them executable
 RUN chmod +x /usr/local/bin/scripts/docker-entrypoint-backend.sh \
     && chmod +x /usr/local/bin/scripts/docker-entrypoint-celery.sh \
-    && chmod +x /usr/local/bin/scripts/docker-entrypoint-migrate.sh
+    && chmod +x /usr/local/bin/scripts/docker-entrypoint-migrate.sh 
 
 
 # Copy project

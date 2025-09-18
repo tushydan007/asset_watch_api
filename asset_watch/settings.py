@@ -15,7 +15,7 @@ LOG_DIR.mkdir(exist_ok=True)  # create the folder if it doesn't exist
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-^a&4zn=v!5&kpcxnmxv1ipi8tc(h_kgc-!mi^y=*4d17zpk*1j'
+SECRET_KEY = "django-insecure-^a&4zn=v!5&kpcxnmxv1ipi8tc(h_kgc-!mi^y=*4d17zpk*1j"
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ.get("SECRET_KEY", "your-secret-key-here-change-in-production")
@@ -105,7 +105,6 @@ DATABASES = {
         conn_health_checks=True,
     )
 }
-
 
 
 # Password validation
@@ -297,7 +296,7 @@ LOGGING = {
             "filename": LOG_DIR / "django.log",
             "formatter": "verbose",
             "maxBytes": 5 * 1024 * 1024,  # 5 MB
-            "backupCount": 5,            # keep last 5 logs
+            "backupCount": 5,  # keep last 5 logs
         },
         "console": {
             "level": "INFO",
