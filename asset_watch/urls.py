@@ -20,6 +20,12 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 
+
+admin.site.site_header = "Asset Watch Admin"
+admin.site.site_title = "Asset Watch Admin Portal"
+admin.site.index_title = "Welcome to the Asset Watch Admin Portal"
+
+
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/auth/", include("djoser.urls")),

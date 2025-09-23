@@ -18,7 +18,7 @@ class Cart(models.Model):
         db_table = "cart"
 
     def __str__(self):
-        return f"Cart for {self.user.email}"
+        return f"Cart {self.id}"
 
     @property
     def total_items(self):
@@ -46,7 +46,7 @@ class CartItem(models.Model):
     }
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    cart = models.ForeignKey(Cart, on_delete=models.CASCADE, related_name="cart_items")
+    cart = models.ForeignKey(Cart, on_delete=models.CASCADE, related_name="items")
     aoi = models.ForeignKey(
         "aoi.Aoi", on_delete=models.CASCADE, related_name="cart_items"
     )

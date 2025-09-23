@@ -26,8 +26,8 @@ A professional Django-based backend system for Area of Interest (AOI) monitoring
 
 ```bash
 git clone <repository>
-cd backend
-cp .env.example .env  # Configure your environment variables
+cd asset_watch
+cp .env .env  # Configure your environment variables
 ```
 
 2. **Start with Docker:**
