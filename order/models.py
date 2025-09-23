@@ -59,7 +59,7 @@ class CartItem(models.Model):
 
     class Meta:
         db_table = "cart_item"
-        unique_together = ["cart", "aoi"]
+        unique_together = [["cart", "aoi"]]
 
     def __str__(self):
         return f"{self.aoi.name} - {self.monitoring_type} monitoring"
